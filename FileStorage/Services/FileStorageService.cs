@@ -141,7 +141,6 @@ namespace FileStorage.Services
 
         public async Task<ListFileDto> ListAllFiles(string? hashCode)
         {
-            Console.WriteLine("In Service list all files");
             var validFiles = new List<DynamoDBFile>();
             ListFileDto fileDto = new(Status.Error, 0);
 
@@ -205,21 +204,24 @@ namespace FileStorage.Services
 
             if (queryResponse.Items.Count != 0)
             {
-                var item = queryResponse.Items[0];
-                var foundFile = new DynamoDBFile
+                var items = queryResponse.Items;
+
+                foreach (var item in items)
                 {
-                    FileName = item["Filename"].S,
-                    FileHash = item["FileHash"].S,
-                    UploadedAt = item["UploadedAt"].S
-                };
-                foundFiles.Add(foundFile);
+                    var foundFile = new DynamoDBFile
+                    {
+                        FileName = item["Filename"].S,
+                        FileHash = item["FileHash"].S,
+                        UploadedAt = item["UploadedAt"].S
+                    };
+                    foundFiles.Add(foundFile);
+                }
             }
             return foundFiles;
         }
 
         public async Task<List<DynamoDBFile>> GetAllFiles()
         {
-            Console.WriteLine("GetAllFiles");
             //Prepare the scan request
             var scanRequest = new ScanRequest
             {
@@ -246,7 +248,6 @@ namespace FileStorage.Services
                 };
                 foundFiles.Add(foundFile);
             }
-            Console.WriteLine("Exiting GetAllFiles" + foundFiles[0].FileName);
             return foundFiles;
         }
 

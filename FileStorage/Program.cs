@@ -16,6 +16,7 @@ builder.Services.AddHealthChecks();
 
 // service registration -> automatically create all instances of dependencies
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+
 builder.Services.AddSingleton<IAmazonS3>(serviceProvider =>
 {
     var config = builder.Configuration.GetSection("S3Bucket:Config");

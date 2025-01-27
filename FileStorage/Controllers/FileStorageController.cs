@@ -16,16 +16,17 @@ public class FileStorageController : ControllerBase
     private readonly IFileStorageService _fileStorageService;
     private readonly ILogger<FileStorageController> _logger;
 
-    public FileStorageController(IFileStorageService fileStorageService)
+    public FileStorageController(IFileStorageService fileStorageService, ILogger<FileStorageController> logger)
     {
         _fileStorageService = fileStorageService;
+        _logger = logger;
     }
 
 
     [HttpGet("listfiles")]
     public async Task<IActionResult> ListAllFiles([FromQuery] string? hashCode)
     {
-        Console.WriteLine("In List All Files");
+        _logger.LogInformation("Getting all the files from S3...");
         var fileNames = await _fileStorageService.ListAllFiles(hashCode);
         return Ok(fileNames);
     }
@@ -41,13 +42,6 @@ public class FileStorageController : ControllerBase
         var uploadToS3 = await _fileStorageService.UploadFilesToS3(file);
         var uploadToDynamoDb = await _fileStorageService.SaveHashToDynamoDb(uploadToS3.FileKey, uploadToS3.FileHash);
         return Ok(uploadToDynamoDb);
-    }
-
-    [HttpDelete("deletefile/{fileHash}")]
-    public async Task<IActionResult> DeleteFile([FromRoute] string fileHash)
-    {
-
-        return Ok();
     }
 
 }
