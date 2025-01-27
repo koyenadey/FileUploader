@@ -1,11 +1,13 @@
 
 using System.Security.Cryptography;
 using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Amazon.S3;
 using Amazon.S3.Model;
-using FileStorage.DTO;
+using FileStorage.Services.DTO;
+using FileStorage.Services.ValueObject;
+using ListFiles.DTO;
+using UploadFilesToS3.DTO;
 
 
 namespace FileStorage.Services
@@ -21,8 +23,9 @@ namespace FileStorage.Services
             _s3Client = s3Client;
             _dynamoDbClient = dynamoDBClient;
         }
-        public async Task<FileStorageResponseDto> UploadFilesToS3(IFormFile file)
+        public async Task<UploadFileToS3Dto> UploadFilesToS3(IFormFile file)
         {
+            var responseFileUpload = new UploadFileToS3Dto(Status.Error, String.Empty);
             try
             {
                 //Generate a unique file name for key
@@ -60,7 +63,7 @@ namespace FileStorage.Services
                         //Prepare request object parts
                         var uploadRequestPart = new UploadPartRequest
                         {
-                            BucketName = "storage",
+                            BucketName = _s3BucketName,
                             Key = fileKey,
                             UploadId = uploadId,
                             PartNumber = partNumber,
@@ -96,32 +99,22 @@ namespace FileStorage.Services
                 Console.WriteLine("Multipart upload completed successfully.");
 
                 // Return a custom object to the response
-                return new FileStorageResponseDto
-                {
-                    IsSuccess = true,
-                    FileKey = fileKey,
-                    Message = "File upload completed successfully.",
-                    FileHash = fileHash
-                };
+                var successMsg = "File upload completed successfully.";
+                responseFileUpload = new UploadFileToS3Dto(Status.Success, successMsg, fileKey, fileHash);
+
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error during multipart upload: {ex.Message}");
-                return new FileStorageResponseDto
-                {
-                    IsSuccess = false,
-                    Message = ex.Message
-                };
             }
-
+            return responseFileUpload;
         }
 
 
-        public async Task<string> SaveHashToDynamoDb(string fileKey, string fileHash)
+        public async Task<ShaResponseDto> SaveHashToDynamoDb(string fileKey, string fileHash)
         {
-            bool IsSuccess = false;
-
             var tableName = _dynamoTableName;
+            var shaResponseDto = new ShaResponseDto(Status.Error, "Error in file hash", "Error happened");
 
             var putRequest = new PutItemRequest
             {
@@ -136,79 +129,36 @@ namespace FileStorage.Services
             try
             {
                 await _dynamoDbClient.PutItemAsync(putRequest);
-                IsSuccess = true;
+                var successMessage = "File Metadata saved successfully!!";
+                shaResponseDto = new ShaResponseDto(Status.Success, fileHash, successMessage);
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Error updating data to DynamoDb", ex.Message);
             }
-            return IsSuccess ? "File Metadata saved successfully!!" : "Error saving data to DynamoDb";
+            return shaResponseDto;
         }
 
-
-        public async Task<ListFileDto> ListAllFiles()
+        public async Task<ListFileDto> ListAllFiles(string? hashCode)
         {
-            ListFileDto fileDto = new(false, 0);
+            Console.WriteLine("In Service list all files");
+            var validFiles = new List<DynamoDBFile>();
+            ListFileDto fileDto = new(Status.Error, 0);
+
             try
             {
-                //Prepare the scan request
-                var scanRequest = new ScanRequest
+                var foundFileList = await (String.IsNullOrEmpty(hashCode) ?
+                    GetAllFiles() : GetAllFilesBySha(hashCode));
+
+                foreach (var foundFile in foundFileList)
                 {
-                    TableName = _dynamoTableName
-                };
-
-                // Scan the DynamoDB table to get all file records
-                var scanResponse = await _dynamoDbClient.ScanAsync(scanRequest);
-
-                var validFiles = new List<DynamoDBFile>();
-
-
-                foreach (var item in scanResponse.Items)
-                {
-                    // Extract file name from the DynamoDB record
-                    var fileName = item["Filename"].S;
-                    var fileHash = item["FileHash"].S;
-                    var uploadedAt = item["UploadedAt"].S;
-
-                    // Check if the file exists in the S3 bucket
-                    try
-                    {
-                        var s3Response = await _s3Client.GetObjectMetadataAsync("storage", fileName);
-
-                        // If file exists, add it to the valid files list
-                        validFiles.Add(new DynamoDBFile
-                        {
-                            FileName = fileName,
-                            FileHash = fileHash,
-                            UploadedAt = uploadedAt
-                        });
-                    }
-                    catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-                    {
-                        Console.WriteLine($"File '{item["Filename"].S}' does not exist in DynamoDB but is still in S3. Skipping...");
-
-                        //Continue to next item
-                        continue;
-
-                        /* It is not advisable to delete data from GET request
-                        Console.WriteLine("File not found in S3, remove the corresponding record from DynamoDB");
-                        var deleteRequest = new DeleteItemRequest
-                        {
-                            TableName = "Files",
-                            Key = new Dictionary<string, AttributeValue>
-                            {
-                                { "Filename", new AttributeValue { S = fileName } },
-                                // { "FileHash", new AttributeValue { S = fileHash } },
-                                { "UploadedAt", new AttributeValue { S = uploadedAt } }
-                            }
-                        };
-
-                        await _dynamoDbClient.DeleteItemAsync(deleteRequest); */
-                    }
+                    Console.WriteLine("X:" + foundFile.FileName);
+                    var isValid = await IsFileInS3Bucket(foundFile.FileName);
+                    if (isValid)
+                        validFiles.Add(foundFile);
                 }
-
                 // Return the list of valid files
-                fileDto = new ListFileDto(true, validFiles.Count(), validFiles);
+                fileDto = new ListFileDto(Status.Success, validFiles.Count(), validFiles);
 
             }
             catch (Exception ex)
@@ -218,5 +168,88 @@ namespace FileStorage.Services
 
             return fileDto;
         }
+
+        public async Task<bool> IsFileInS3Bucket(string fileName)
+        {
+            bool isFound = false;
+            try
+            {
+                var s3Response = await _s3Client.GetObjectMetadataAsync(_s3BucketName, fileName);
+
+                isFound = true;
+            }
+            catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                Console.WriteLine($"File '{fileName}' does not exist in DynamoDB but is still in S3. Skipping...");
+            }
+
+            return isFound;
+        }
+
+        public async Task<List<DynamoDBFile>> GetAllFilesBySha(string hashCode)
+        {
+            var foundFiles = new List<DynamoDBFile>();
+
+            var queryRequest = new QueryRequest
+            {
+                TableName = _dynamoTableName,
+                IndexName = "FileHashIndex",
+                KeyConditionExpression = "FileHash =:hashCode",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    {":hashCode",new AttributeValue { S = hashCode }}
+                }
+            };
+            var queryResponse = await _dynamoDbClient.QueryAsync(queryRequest);
+
+
+            if (queryResponse.Items.Count != 0)
+            {
+                var item = queryResponse.Items[0];
+                var foundFile = new DynamoDBFile
+                {
+                    FileName = item["Filename"].S,
+                    FileHash = item["FileHash"].S,
+                    UploadedAt = item["UploadedAt"].S
+                };
+                foundFiles.Add(foundFile);
+            }
+            return foundFiles;
+        }
+
+        public async Task<List<DynamoDBFile>> GetAllFiles()
+        {
+            Console.WriteLine("GetAllFiles");
+            //Prepare the scan request
+            var scanRequest = new ScanRequest
+            {
+                TableName = _dynamoTableName
+            };
+
+            // Scan the DynamoDB table to get all file records
+            var scanResponse = await _dynamoDbClient.ScanAsync(scanRequest);
+
+            var foundFiles = new List<DynamoDBFile>();
+
+            foreach (var item in scanResponse.Items)
+            {
+                // Extract file name from the DynamoDB record
+                var fileName = item["Filename"].S;
+                var fileHash = item["FileHash"].S;
+                var uploadedAt = item["UploadedAt"].S;
+
+                var foundFile = new DynamoDBFile
+                {
+                    FileName = fileName,
+                    FileHash = fileHash,
+                    UploadedAt = uploadedAt
+                };
+                foundFiles.Add(foundFile);
+            }
+            Console.WriteLine("Exiting GetAllFiles" + foundFiles[0].FileName);
+            return foundFiles;
+        }
+
+
     }
 }

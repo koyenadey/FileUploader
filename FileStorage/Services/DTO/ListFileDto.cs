@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FileStorage.Services.ValueObject;
 
-namespace FileStorage.DTO
+namespace ListFiles.DTO
 {
     public class DynamoDBFile
     {
@@ -14,18 +15,18 @@ namespace FileStorage.DTO
 
     public class ListFileDto
     {
-        public bool IsSuccess { get; set; }
+        public Status Status { get; set; }
         public int TotalFileCount { get; set; }
-        public List<DynamoDBFile> Files = new();
+        public List<DynamoDBFile> Files { get; set; } = new();
 
-        public ListFileDto(bool status, int totalCount)
+        public ListFileDto(Status status, int totalCount)
         {
-            IsSuccess = status;
+            Status = status;
             TotalFileCount = totalCount;
         }
-        public ListFileDto(bool status, int totalCount, List<DynamoDBFile> files)
+        public ListFileDto(Status status, int totalCount, List<DynamoDBFile> files)
         {
-            IsSuccess = status;
+            Status = status;
             TotalFileCount = totalCount;
             Files = files;
         }

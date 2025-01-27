@@ -1,13 +1,14 @@
-using FileStorage.DTO;
+using FileStorage.Services.DTO;
+using ListFiles.DTO;
+using UploadFilesToS3.DTO;
 
 
 namespace FileStorage.Services
 {
     public interface IFileStorageService
     {
-        public Task<FileStorageResponseDto> UploadFilesToS3(IFormFile file);
-        public Task<string> SaveHashToDynamoDb(string fileKey, string fileHash);
-
-        public Task<ListFileDto> ListAllFiles();
+        public Task<UploadFileToS3Dto> UploadFilesToS3(IFormFile file);
+        public Task<ShaResponseDto> SaveHashToDynamoDb(string fileKey, string fileHash);
+        public Task<ListFileDto> ListAllFiles(string? hashCode);
     }
 }

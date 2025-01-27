@@ -5,6 +5,7 @@ using Amazon.DynamoDBv2.Model;
 using Amazon.S3;
 using Amazon.S3.Model;
 using FileStorage.Services;
+using FileStorage.Services.ValueObject;
 using Moq;
 using Xunit;
 
@@ -63,7 +64,7 @@ namespace FileStorage.Tests
             var result = await _filestorageService.UploadFilesToS3(mockfile.Object);
 
             //Assert
-            Assert.True(result.IsSuccess);
+            Assert.Equal(Status.Success, result.Status);
             Assert.Equal("File upload completed successfully.", result.Message);
             Assert.NotEmpty(result.FileHash);
         }
@@ -87,7 +88,7 @@ namespace FileStorage.Tests
             var result = await _filestorageService.SaveHashToDynamoDb(fileKey, fileHash);
 
             //Assert
-            Assert.Equal("File Metadata saved successfully!!", result);
+            Assert.Equal("File Metadata saved successfully!!", result.Message);
         }
     }
 }

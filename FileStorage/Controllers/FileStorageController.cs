@@ -22,10 +22,11 @@ public class FileStorageController : ControllerBase
     }
 
 
-    [HttpGet]
-    public async Task<IActionResult> GetAllFileNames()
+    [HttpGet("listfiles")]
+    public async Task<IActionResult> ListAllFiles([FromQuery] string? hashCode)
     {
-        var fileNames = _fileStorageService.ListAllFiles();
+        Console.WriteLine("In List All Files");
+        var fileNames = await _fileStorageService.ListAllFiles(hashCode);
         return Ok(fileNames);
     }
 
@@ -39,7 +40,14 @@ public class FileStorageController : ControllerBase
         }
         var uploadToS3 = await _fileStorageService.UploadFilesToS3(file);
         var uploadToDynamoDb = await _fileStorageService.SaveHashToDynamoDb(uploadToS3.FileKey, uploadToS3.FileHash);
-        return Ok($"S3 file upload - {uploadToS3.Message}... DynamoDB sha256 upload status - {uploadToDynamoDb}");
+        return Ok(uploadToDynamoDb);
+    }
+
+    [HttpDelete("deletefile/{fileHash}")]
+    public async Task<IActionResult> DeleteFile([FromRoute] string fileHash)
+    {
+
+        return Ok();
     }
 
 }
