@@ -1,35 +1,43 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using FileStorage.Services.Shared.Attributes;
 using FileStorage.Services.ValueObject;
 
-namespace ListFiles.DTO
+namespace FileStorage.Services.DTO
 {
     public class DynamoDBFile
     {
-        public string FileName { get; set; }
-        public string FileHash { get; set; }
-        public string UploadedAt { get; set; }
+        public string FileName { get; set; } = String.Empty;
+        public string FileHash { get; set; } = String.Empty;
+        public string UploadedAt { get; set; } = String.Empty;
     }
 
-    public class ListFileDto
+    public class ListFileResponseDto
     {
         public Status Status { get; set; }
         public int TotalFileCount { get; set; }
         public List<DynamoDBFile> Files { get; set; } = new();
 
-        public ListFileDto(Status status, int totalCount)
+        public ListFileResponseDto(Status status, int totalCount)
         {
             Status = status;
             TotalFileCount = totalCount;
         }
-        public ListFileDto(Status status, int totalCount, List<DynamoDBFile> files)
+        public ListFileResponseDto(Status status, int totalCount, List<DynamoDBFile> files)
         {
             Status = status;
             TotalFileCount = totalCount;
             Files = files;
         }
+    }
 
+    public class ListFileInputDto
+    {
+        [ValidateHashCode]
+        public string? HashCode { get; set; } = string.Empty;
     }
 }
