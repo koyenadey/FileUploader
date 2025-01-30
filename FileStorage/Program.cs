@@ -13,20 +13,7 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 // Add services to the container.
-builder.Services.AddControllers(options =>
-{
-    options.Filters.Add(new RequestSizeLimitAttribute(100_000_000)); // Set limit to 100 MB
-});
-
-builder.Services.AddCors(options =>
-    {
-        options.AddPolicy("AllowAll", builder =>
-        {
-            builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader();
-        });
-    });
+builder.Services.AddControllers();
 
 builder.Services.AddHealthChecks();
 

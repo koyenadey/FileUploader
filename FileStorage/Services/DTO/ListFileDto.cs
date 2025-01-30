@@ -32,6 +32,6 @@ namespace FileStorage.Services.DTO
     public class ListFileInputDto
     {
         [ValidateHashCode]
-        public string? HashCode { get; set; } = string.Empty;
+        public string? hashCode { get; set; } = string.Empty;
     }
 }

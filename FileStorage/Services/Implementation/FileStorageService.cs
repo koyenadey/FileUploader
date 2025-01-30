@@ -74,7 +74,7 @@ namespace FileStorage.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error during file upload: {ex}");
+                _logger.LogError($"Error during file upload: {ex.Message}");
                 responseFileUpload = new ResponseFileUploadDto(Status.Success, "Error");
             }
 
@@ -104,7 +104,7 @@ namespace FileStorage.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error updating data to DynamoDb:" + fileKey + "//" + ex);
+                _logger.LogError($"Error updating data to DynamoDb: {ex.Message}");
             }
             return shaResponseDto;
         }
@@ -134,7 +134,8 @@ namespace FileStorage.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Internal server error: {ex.Message}");
+                _logger.LogError($"Internal server error: {ex.Message}");
+                //Console.WriteLine();
             }
 
             return fileDto;
@@ -151,11 +152,11 @@ namespace FileStorage.Services
             }
             catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogError($"File '{fileName}' does not exist in S3..." + ex);
+                _logger.LogError($"File '{fileName}' does not exist in S3..." + ex.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"File '{fileName}' does not exist in S3..." + ex);
+                _logger.LogError($"File '{fileName}' does not exist in S3..." + ex.Message);
             }
 
             return isFound;
@@ -175,24 +176,30 @@ namespace FileStorage.Services
                     {":hashCode",new AttributeValue { S = hashCode }}
                 }
             };
-            var queryResponse = await _dynamoDbClient.QueryAsync(queryRequest);
-
-
-            if (queryResponse.Items.Count != 0)
+            try
             {
-                var items = queryResponse.Items;
-
-                foreach (var item in items)
+                var queryResponse = await _dynamoDbClient.QueryAsync(queryRequest);
+                if (queryResponse.Items.Count != 0)
                 {
-                    var foundFile = new DynamoDBFile
+                    var items = queryResponse.Items;
+
+                    foreach (var item in items)
                     {
-                        FileName = item["Filename"].S,
-                        FileHash = item["FileHash"].S,
-                        UploadedAt = item["UploadedAt"].S
-                    };
-                    foundFiles.Add(foundFile);
+                        var foundFile = new DynamoDBFile
+                        {
+                            FileName = item["Filename"].S,
+                            FileHash = item["FileHash"].S,
+                            UploadedAt = item["UploadedAt"].S
+                        };
+                        foundFiles.Add(foundFile);
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Internal server error: {ex.Message}");
+            }
+
             return foundFiles;
         }
 
@@ -266,7 +273,7 @@ namespace FileStorage.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error happened: " + ex);
+                _logger.LogError("Internal server error: " + ex.Message);
                 fileDownloadDto = new DownloadFileFromS3Dto(Status.Error, StatusCodes.Status500InternalServerError, ex.Message, String.Empty);
             }
             return fileDownloadDto;

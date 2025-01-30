@@ -28,11 +28,12 @@ public class FileStorageController : ControllerBase
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var fileNames = await _fileStorageService.ListAllFiles(fileInputDto?.HashCode);
+        var fileNames = await _fileStorageService.ListAllFiles(fileInputDto?.hashCode);
         return Ok(fileNames);
     }
 
     [HttpPost("upload")]
+    [RequestFormLimits(MultipartBodyLengthLimit = 2147483648L)]
     public async Task<IActionResult> UploadFile([FromForm] UploadFileInputDto uploadFileDto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -40,7 +41,6 @@ public class FileStorageController : ControllerBase
         var file = uploadFileDto.UploadFile;
 
         var uploadToS3 = await _fileStorageService.UploadFilesToS3(file);
-        Console.WriteLine("ABCD" + uploadToS3.FileKey);
         var uploadToDynamoDb = await _fileStorageService.SaveHashToDynamoDb(uploadToS3.FileKey, uploadToS3.FileHash);
         return Ok(uploadToDynamoDb);
     }
@@ -61,6 +61,7 @@ public class FileStorageController : ControllerBase
     }
 
     [HttpGet("download/{fileKey}")]
+    [ValidateFileKey]
     public async Task<IActionResult> DownloadFile(string fileKey)
     {
         HttpContext.Features.Get<IHttpResponseBodyFeature>()?.DisableBuffering();

@@ -17,10 +17,14 @@ namespace FileStorage.Services.Shared.Attributes
                 if (!Regex.IsMatch(fileKey, Pattern))
                 {
                     context.Result = new BadRequestObjectResult("Invalid key format. Expected format: <GUID>_filename.txt");
+                    return;
                 }
             }
             else
+            {
                 context.Result = new BadRequestObjectResult("Invalid file key.");
+                return;
+            }
         }
     }
 }

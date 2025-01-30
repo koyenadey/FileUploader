@@ -36,7 +36,7 @@ The application exposes a set of **REST API** endpoints written in C#, which han
 - [Assumptions](#️-assumptions)
   1. [General](#-general)
   2. [Methods](#-methods)
-- [How To Test](#tests)
+- [How To Test](#how-to-test)
 - [License](#license)
 
 ## 🔗 Requirements
@@ -443,9 +443,17 @@ download/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt
 
 - I have kept a separate `ValueObject` folder which contains a Enum called Status for the formatting the DTO's to have Status of the response.
 
+- I have developed and tested the application in localhost. However, when we will use the application to integrate with a frontend application CORS needs to be enabled.
+
 ### 🪭 Methods
 
 #### 🏷️ Upload File Method
+
+I am using the TransferUtility class to upload the files.
+
+##### WHY
+
+1.  This works for both small and large files. In case of large files, it does mutlti part upload automatically.
 
 #### 🏷️ List All Files Method
 
@@ -510,3 +518,5 @@ For situations where the **file needs to be downloaded directly** without requir
 ---
 
 Feel free to choose the option that best fits your **use case**!
+
+## ✅ How To Test
