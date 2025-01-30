@@ -445,7 +445,7 @@ download/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt
   "Status": "Success",
   "StatusCode": 200,
   "Message": "File uploaded successfully.",
-  "DownloadUrl": "http://localstack:4566/files/document1.pdf?access_key=abc123xyz&expires=2024-02-01T12:00:00Z"
+  "DownloadUrl": "http://localstack:4566/files/document1.txt?access_key=abc123xyz&expires=2024-02-01T12:00:00Z"
 }
 ```
 
