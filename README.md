@@ -490,7 +490,7 @@ Downloads the file directly to the browser.
 
 I am using the TransferUtility class to upload the files.
 
-> Note:Added `DisableDefaultChecksumValidation = true ` in TransUtilityRequest object to overcome the incorrect checksum validation issue with latest localstack image.
+> Note:Added `DisableDefaultChecksumValidation = true ` in TransferUtilityRequest object to overcome the incorrect checksum validation issue with latest localstack image.
 
 ##### WHY
 
