@@ -75,7 +75,7 @@ namespace FileStorage.Services
             catch (Exception ex)
             {
                 _logger.LogError($"Error during file upload: {ex.Message}");
-                responseFileUpload = new ResponseFileUploadDto(Status.Success, "Error");
+                responseFileUpload = new ResponseFileUploadDto(Status.Error, "Error");
             }
 
             return responseFileUpload;
@@ -128,7 +128,7 @@ namespace FileStorage.Services
                     }
 
                 }
-                // Return the list of valid files
+
                 fileDto = new ListFileResponseDto(Status.Success, validFiles.Count, validFiles);
 
             }
@@ -207,7 +207,6 @@ namespace FileStorage.Services
         {
             var foundFiles = new List<DynamoDBFile>();
 
-            //Prepare the scan request
             var scanRequest = new ScanRequest
             {
                 TableName = _dynamoTableName,
@@ -217,11 +216,9 @@ namespace FileStorage.Services
 
             do
             {
-                // Scan the DynamoDB table to get all file records
                 var scanResponse = await _dynamoDbClient.ScanAsync(scanRequest);
                 foreach (var item in scanResponse.Items)
                 {
-                    // Extract file name from the DynamoDB record
                     var fileName = item["Filename"].S;
                     var fileHash = item["FileHash"].S;
                     var uploadedAt = item["UploadedAt"].S;

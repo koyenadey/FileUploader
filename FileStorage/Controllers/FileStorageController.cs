@@ -5,6 +5,7 @@ using Amazon.S3.Model;
 using FileStorage.Services;
 using FileStorage.Services.DTO;
 using FileStorage.Services.Shared.Attributes;
+using FileStorage.Services.ValueObject;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -33,15 +34,25 @@ public class FileStorageController : ControllerBase
     }
 
     [HttpPost("upload")]
+    [RequestSizeLimit(2147485696L)]
     [RequestFormLimits(MultipartBodyLengthLimit = 2147483648L)]
     public async Task<IActionResult> UploadFile([FromForm] UploadFileInputDto uploadFileDto)
     {
+        ShaResponseDto uploadToDynamoDb;
+
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var file = uploadFileDto.UploadFile;
 
         var uploadToS3 = await _fileStorageService.UploadFilesToS3(file);
-        var uploadToDynamoDb = await _fileStorageService.SaveHashToDynamoDb(uploadToS3.FileKey, uploadToS3.FileHash);
+        if (uploadToS3.Status == Status.Success)
+        {
+            uploadToDynamoDb = await _fileStorageService.SaveHashToDynamoDb(uploadToS3.FileKey, uploadToS3.FileHash);
+        }
+        else
+        {
+            uploadToDynamoDb = new ShaResponseDto(Status.Error, "Error in file upload to S3", "Error happened");
+        }
         return Ok(uploadToDynamoDb);
     }
 
@@ -79,7 +90,7 @@ public class FileStorageController : ControllerBase
 
             await using (var responseStream = s3Response.ResponseStream)
             {
-                await responseStream.CopyToAsync(Response.Body, bufferSize: 81920); // Use a large buffer size (e.g., 80 KB)
+                await responseStream.CopyToAsync(Response.Body, bufferSize: 81920);
             }
             return new EmptyResult();
         }

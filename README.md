@@ -11,7 +11,7 @@ This is application integrates with AWS services to `upload`, `retrieve` and `li
 ### 📌 Key Features
 
 - 🍀 **Resilient File Upload** to AWS storage S3 Bucket.
-- 🍀 **Efficient Retrieves** from files stored in S3 Bucket.
+- 🍀 **Efficiently Retrieves** from files stored in S3 Bucket.
 - 🍀 **Lists all stored files** for easy management and retrieval from S3.
 - 🍀 **SHA-256 Hashing**: calculates and stores the SHA-256 hash of each uploaded file to DynamoDB, ensuring file integrity and traceability.
 
@@ -36,8 +36,7 @@ The application exposes a set of **REST API** endpoints written in C#, which han
 - [Assumptions](#️-assumptions)
   1. [General](#-general)
   2. [Methods](#-methods)
-- [How To Test](#how-to-test)
-- [License](#license)
+- [Test Simulation](#-test-simulation)
 
 ## 🔗 Requirements
 
@@ -51,8 +50,8 @@ The application exposes a set of **REST API** endpoints written in C#, which han
 
 - S3 Bucket
 - DynamoDB
-- LocalStack
-- AWS SDK for .NET
+- Local stack is used to simulate `AWS` environment locally
+- AWS SDK for .NET is used to communicate with `AWS` services
 
 ## 🛠️ Installations
 
@@ -321,7 +320,7 @@ sequenceDiagram
 
 ## 🌐 API EndPoints
 
-All the APIs start with `/api/filestorage/{ActionName}`.
+All the APIs start with `/api/filestorage/[action name]`.
 
 For example:
 
@@ -334,16 +333,21 @@ For example:
 | ----------- | ---------------------------------- | ------------------------------------------------------ | ---------------- | ---------------------- |
 | GET         | /filestorage/listfiles?hashCode    | Lists all file details or list a item detail           | Query            | Yes ✅                 |
 | GET         | /filestorage/downloadfile/:fileKey | Gets the link to download the file to client's browser | Route            | No ❌                  |
+| GET         | /filestorage/download/:fileKey     | Downloads the file directly to the user browser        | Route            | No ❌                  |
 | POST        | /filestorage/upload                | Uploads the file to S3 and uploads the sha to dynamodb | Body             | No ❌                  |
 
 ## 📌 API Request-Response Reference
+
+If running from docker the hostname would be -
+
+http://localhost:8080
 
 ### 🔷 API Endpoint: List Files by Hash Code
 
 #### Request:
 
 **Method:** `GET`  
-**URL:** `/filestorage/listfiles?hashCode`
+**URL:** `/api/filestorage/listfiles?hashCode`
 
 #### Sample Input: For valid hashcode
 
@@ -356,17 +360,35 @@ For example:
 ```json
 {
   "Status": "Success",
-  "TotalFileCount": 2,
+  "TotalFileCount": 1,
   "Files": [
     {
-      "FileName": "document1.pdf",
-      "FileHash": "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3c8a3dfc4d9b4a9e7",
+      "FileName": "f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document1.txt",
+      "FileHash": "a8b2d1c5f3e4a6b7c9d8e0f1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1",
+      "UploadedAt": "2024-01-30T12:34:56Z"
+    }
+  ]
+}
+```
+
+#### All files without a hashCode:
+
+#### Sample Output:
+
+```json
+{
+  "Status": "Success",
+  "TotalFileCount": 1,
+  "Files": [
+    {
+      "FileName": "f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document1.txt",
+      "FileHash": "a8b2d1c5f3e4a6b7c9d8e0f1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1",
       "UploadedAt": "2024-01-30T12:34:56Z"
     },
     {
-      "FileName": "image1.png",
-      "FileHash": "9c56b8a8e1a2d5b7c3e8f4a9d6b1c0e7f8a2d5c3b9e7a1c4f3d2b8a9",
-      "UploadedAt": "2024-01-30T13:45:10Z"
+      "FileName": "g2f913e7-9cba-4e56-91f8-e8c0c9c697g8_test1.txt",
+      "FileHash": "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3c8a3dfc4d9b4a9e7",
+      "UploadedAt": "2024-01-30T12:34:56Z"
     }
   ]
 }
@@ -379,7 +401,7 @@ For example:
 #### Request:
 
 **Method:** `POST`  
-**URL:** `/filestorage/upload`<br/>
+**URL:** `/api/filestorage/upload`<br/>
 **BODY** `IFormFile`
 
 #### Sample Input:
@@ -404,10 +426,10 @@ For example:
 
 ### 🔷 API Endpoint: Download files from S3
 
-#### Request:
+#### 1. Request:
 
 **Method:** `GET`  
-**URL:** `/filestorage/download/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt`<br/>
+**URL:** `/api/filestorage/download/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt`<br/>
 
 #### Sample Input:
 
@@ -424,9 +446,28 @@ download/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt
   "Status": "Success",
   "StatusCode": 200,
   "Message": "File uploaded successfully.",
-  "DownloadUrl": "http://example.com/files/document1.pdf?access_key=abc123xyz&expires=2024-02-01T12:00:00Z"
+  "DownloadUrl": "http://localstack:4566/files/document1.pdf?access_key=abc123xyz&expires=2024-02-01T12:00:00Z"
 }
 ```
+
+> Note: The url that is generated for localstack is prefixed with http://localstack:4566 for localstack but to download it from browser need to change localstack to localhost for downloading to begun.
+
+#### 2. Request:
+
+**Method:** `GET`  
+**URL:** `/api/filestorage/downloadfile/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt`<br/>
+
+#### Sample Input:
+
+```
+downloadfile/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt
+```
+
+#### Sample Output:
+
+**Direct Streaming**
+
+Downloads the file directly to the browser.
 
 ## 🙋🏻‍♀️ Assumptions
 
@@ -488,10 +529,11 @@ Depending on the **scenario** and **requirements**, both **pre-signed URLs** and
 
 #### 1. Pre-Signed URLs for Email Sharing
 
-If you need to **send the download link** via email to a user, **pre-signed URLs** are a great choice. These URLs:
+If you need to **send the download link** via email to a user or where we do not want to stress our application server, **pre-signed URLs** are a great choice. These URLs:
 
 - Are **secure** and include an **expiration time**, ensuring temporary access to the file.
 - Can be easily shared via **email** without worrying about unauthorized access.
+- No stress to application server at all, since it is downloaded from S3 bucket directly.
 - Provide **control** over who can download the file and for how long.
 
 **Ideal use case:** When sending files to users in a **secure and controlled manner** via email.
@@ -500,23 +542,39 @@ If you need to **send the download link** via email to a user, **pre-signed URLs
 
 #### 2. Direct Streaming for Immediate Access
 
-For situations where the **file needs to be downloaded directly** without requiring a separate link (e.g., within a web app), **direct streaming** is often the better option. This approach:
+For situations where the **file needs to be downloaded directly** without requiring a separate link, within client's bowser, **direct streaming** is often the better option. This approach:
 
 - **Streams** the file directly to the user without the need for an extra URL.
 - Is **quick** and **efficient**, with no extra steps for the user.
 - Does, however, **put some load on the server**, as the file is being processed and streamed in real-time.
 
-**Ideal use case:** When you need to provide **instant access** to files with minimal complexity, and server load is not a major concern.
+**Ideal use case:** When you need to download files without the hassle of links, and server load is not a major concern.
 
 ---
 
 #### Which One to Use?
 
-- If you're sending a file link to users, **go with pre-signed URLs** for better **security** and **control**.
+- If you're sending a file link to users, **go with pre-signed URLs** for better **security** and **control** without putting any stress any server load.
 - If it's for **quick downloads** or streaming content directly without links, **direct streaming** works well, though keep an eye on **server load**.
 
 ---
 
 Feel free to choose the option that best fits your **use case**!
 
-## ✅ How To Test
+## ✅ Test Simulation
+
+**Upload File Method**
+
+- I have tested simultaneously with 10 hits in parallel uploading files to S3 bucket and approximately it takes 38secs/100MB file upload in my system.
+- I have tested with uploading a file with size of 2GB with 2 parallel hits with aprroximately 4 mins/2GB.
+- I initially made 5 requests, ensuring that a new request was initiated as soon as one completed. This process continued for 15 requests in total, and for a 100MB file, the total processing time was approximately 39.5 seconds.
+
+**List All Files Method**
+
+- With 2 parallel uploads ongoing, I have tested 5 parallel list all files which approximately takes 2mins/1GB to upload.
+
+**Download File Method**
+
+- I tested downloading 10 files, each 5MB in size continuosly for 2 mins and average response time is 700ms.
+- I couldn't test larger files of 2GB as LocalStack ran out of memory.
+- I successfully tested downloading a 512MB file using both download methods.
