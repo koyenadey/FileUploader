@@ -58,7 +58,8 @@ namespace FileStorage.Services
                         Key = fileKey,
                         ContentType = file.ContentType,
                         PartSize = 5 * 1024 * 1024,
-                        AutoCloseStream = true
+                        AutoCloseStream = true,
+                        DisableDefaultChecksumValidation = true
                     };
                     await _transferUtility.UploadAsync(uploadReq);
 
