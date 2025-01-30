@@ -8,7 +8,7 @@ namespace FileStorage.Services.Shared.Attributes
 {
     public class ValidateFileKey : ActionFilterAttribute
     {
-        private readonly string Pattern = @"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}_.+";
+        private readonly string Pattern = @"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {

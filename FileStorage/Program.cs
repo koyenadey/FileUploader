@@ -42,7 +42,7 @@ builder.Services.AddSingleton<IAmazonS3>(serviceProvider =>
         ServiceURL = builder.Configuration["S3Bucket:Config:ServiceUrl"],
         ForcePathStyle = builder.Configuration.GetValue<bool>("S3Bucket:Config:ForcePathStyle"),
         MaxErrorRetry = builder.Configuration.GetValue<int>("S3Bucket:Config:MaxErrorRetry"),
-        Timeout = TimeSpan.FromSeconds(30),
+        Timeout = TimeSpan.FromSeconds(10),
         RetryMode = RequestRetryMode.Standard
     };
     return new AmazonS3Client(amazonS3Config);

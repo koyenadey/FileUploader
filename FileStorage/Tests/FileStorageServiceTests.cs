@@ -277,7 +277,7 @@ namespace FileStorage.Tests
                     It.IsAny<GetPreSignedUrlRequest>()))
                     .ReturnsAsync($"https://localhost:5000/{mockFileKey}");
 
-            var result = await _filestorageService.DownloadFileFromS3(mockFileKey);
+            var result = await _filestorageService.DownloadFromS3(mockFileKey);
 
             Assert.Equal($"https://localhost:5000/{mockFileKey}", result.DownloadUrl);
             Assert.Equal(200, result.StatusCode);
@@ -297,9 +297,9 @@ namespace FileStorage.Tests
                 .Setup(mfs => mfs.GetObjectMetadataAsync("storage", fileKey, default))
                 .Throws(new Exception("Not Found"));
 
-            // var responseObj = new DownloadFileFromS3Dto(Status.Error, 404, "", "Not Found");
+            var responseObj = new DownloadFileFromS3Dto(Status.Error, 404, "", "Not Found");
 
-            var result = await _filestorageService.DownloadFileFromS3(fileKey);
+            var result = await _filestorageService.DownloadFromS3(fileKey);
 
             Assert.Equal(404, result.StatusCode);
             Assert.Equal("Not Found", result.DownloadUrl);

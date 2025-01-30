@@ -1,5 +1,11 @@
 # File Storage System
 
+![Static Badge](https://img.shields.io/badge/ASP_.NET_Core_-v.8-purple?style=flat)
+![Static Badge](https://img.shields.io/badge/AWS_S3-S3?style=flat&logo=amazons3&logoColor=black&labelColor=white&color=239120)
+![Static Badge](https://img.shields.io/badge/AWS_DynamoDB-DB?style=flat&logo=amazondynamodb&logoColor=white&labelColor=gray&color=4053D6)
+![C#](https://img.shields.io/badge/C%23-239120?style=flat&logo=csharp&logoColor=white&labelColor=239120)
+![Static Badge](https://img.shields.io/badge/xUnit-Testing-blue?style=flat)
+
 This is application integrates with AWS services to `upload`, `retrieve` and `list` all stored files in AWS. It leverages **LocalStack** a fully functional local AWS cloud stack to simulate AWS services locally during development.
 
 ### 📌 Key Features
@@ -13,7 +19,7 @@ The application exposes a set of **REST API** endpoints written in C#, which han
 
 ## Table of Contents
 
-- [Problem Statement](#-problem-statement)
+- [Requirements](#-requirements)
 - [Services Used](#-aws-services-used)
 - [Installation](#️-installations)
 - [Folder Structure](#folder-structure)
@@ -26,18 +32,20 @@ The application exposes a set of **REST API** endpoints written in C#, which han
     1. [Sequence Diagram - With HashCode](#-the-sequence-diagram-when-user-provides-a-hash-code)
     2. [Sequence Diagram - All Files](#-the-below-sequence-diagram-explains-the-case-when-user-does-not-provide-a-hash-code)
 - [API Endpoints](#-api-endpoints)
-- [Assumptions](#assumptions)
-- [Tests](#tests)
-- [Problems it Solves](#problems-it-solves)
+- [API Request-Response Reference](#-api-request-response-reference)
+- [Assumptions](#️-assumptions)
+  1. [General](#-general)
+  2. [Methods](#-methods)
+- [How To Test](#tests)
 - [License](#license)
 
-## 🔗 Problem-Statement
+## 🔗 Requirements
 
-| Feature           | Status | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| ----------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Upload file**   | ✅     | A a user,wants to upload a file to S3 for long-term storage. The file can be any size from 128KB to 2GB. Unfortunately, user has a slow internet connection, and sometimes there might be network interruptions, despite that the application should be able to upload files efficiently. Along with uploading the file, user wants to calculate its SHA-256 value and store it in DynamoDB for further analysis. Two important points to consider:<br/>1. Memory used: User has small servers which cannot have more than 2GB of memory.<br/>2. Security: For security reasons, the whole file cannot be stored in the memory, even for a fraction of a second (e.g., even minimum size files like 128KB). |
-| **Download file** | ❌     | User wants to download a file that was previously uploaded by them or any other user. The download process should be resilient to network interruptions within 10 seconds, if possible.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| **List files**    | ❌     | The user wants to list all files and find specific files using their SHA-256 values. The logic should handle cases where the file was deleted from S3, but the DynamoDB record still exists. It is acceptable to have an inconsistent state for a short time when a file was deleted during a request.                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Feature           | IsRequired | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Upload file**   | ✅         | A a user,wants to upload a file to S3 for long-term storage. The file can be any size from 128KB to 2GB. Unfortunately, user has a slow internet connection, and sometimes there might be network interruptions, despite that the application should be able to upload files efficiently. Along with uploading the file, user wants to calculate its SHA-256 value and store it in DynamoDB for further analysis. Two important points to consider:<br/>1. Memory used: User has small servers which cannot have more than 2GB of memory.<br/>2. Security: For security reasons, the whole file cannot be stored in the memory, even for a fraction of a second (e.g., even minimum size files like 128KB). |
+| **Download file** | ❌         | User wants to download a file that was previously uploaded by them or any other user. The download process should be resilient to network interruptions within 10 seconds, if possible.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **List files**    | ❌         | The user wants to list all files and find specific files using their SHA-256 values. The logic should handle cases where the file was deleted from S3, but the DynamoDB record still exists. It is acceptable to have an inconsistent state for a short time when a file was deleted during a request.                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## ✅ AWS Services Used
 
@@ -172,6 +180,8 @@ The application supports resilient uploading files with the following characteri
 
 ### Sequence Diagram
 
+> The sequence diagram for uploading file process is given below -
+
 #### 🟢 The sequence diagram for the upload process is given below -
 
 ```mermaid
@@ -207,7 +217,6 @@ The application supports Listing file details with the following characteristics
 
 ### Sequence Diagram
 
-> Note: To view the diagram below, you may need to install the **Mermaid** plugin for your editor.
 > The sequence diagram for the list all files process is given below -
 
 #### 🟢 The sequence diagram when user provides a hash code
@@ -272,8 +281,7 @@ sequenceDiagram
 
 ### 📄 Download File
 
-> Note: To view the diagram below, you may need to install the **Mermaid** plugin for your editor.
-> The application supports downloading file with the following characteristics:
+> Note: The application supports downloading file with the following characteristics:
 
 | Feature                                | Description                                                                                           |
 | -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -284,7 +292,6 @@ sequenceDiagram
 
 ### Sequence Diagram
 
-> Note: To view the diagram below, you may need to install the **Mermaid** plugin for your editor.
 > The sequence diagram for downloading a file is given below -
 
 #### 🟢 The sequence diagram when downloads a file with a valid file key
@@ -314,7 +321,7 @@ sequenceDiagram
 
 ## 🌐 API EndPoints
 
-All the APIs start with `/api/filestorage/ActionName`.
+All the APIs start with `/api/filestorage/{ActionName}`.
 
 For example:
 
@@ -323,17 +330,124 @@ For example:
 2. To check the application's health, simply navigate to this URL in your browser:  
    `https://localhost:8080/health`
 
-| HTTP Method | Endpoint                        | Description                                            | Parameter - Type | Parameter - IsOptional |
-| ----------- | ------------------------------- | ------------------------------------------------------ | ---------------- | ---------------------- |
-| GET         | /filestorage/listfiles?HashCode | Lists all file details or list a item detail           | Query            | Yes ✅                 |
-| GET         | /filestorage/download/:fileKey  | Gets the link to download the file to client's browser | Route            | No ❌                  |
-| POST        | /filestorage/upload             | Uploads the file to S3 and uploads the sha to dynamodb | Body             | No ❌                  |
+| HTTP Method | Endpoint                           | Description                                            | Parameter - Type | Parameter - IsOptional |
+| ----------- | ---------------------------------- | ------------------------------------------------------ | ---------------- | ---------------------- |
+| GET         | /filestorage/listfiles?hashCode    | Lists all file details or list a item detail           | Query            | Yes ✅                 |
+| GET         | /filestorage/downloadfile/:fileKey | Gets the link to download the file to client's browser | Route            | No ❌                  |
+| POST        | /filestorage/upload                | Uploads the file to S3 and uploads the sha to dynamodb | Body             | No ❌                  |
+
+## 📌 API Request-Response Reference
+
+### 🔷 API Endpoint: List Files by Hash Code
+
+#### Request:
+
+**Method:** `GET`  
+**URL:** `/filestorage/listfiles?hashCode`
+
+#### Sample Input: For valid hashcode
+
+```
+?hashCode=a8b2d1c5f3e4a6b7c9d8e0f1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1
+```
+
+#### Sample Output:
+
+```json
+{
+  "Status": "Success",
+  "TotalFileCount": 2,
+  "Files": [
+    {
+      "FileName": "document1.pdf",
+      "FileHash": "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3c8a3dfc4d9b4a9e7",
+      "UploadedAt": "2024-01-30T12:34:56Z"
+    },
+    {
+      "FileName": "image1.png",
+      "FileHash": "9c56b8a8e1a2d5b7c3e8f4a9d6b1c0e7f8a2d5c3b9e7a1c4f3d2b8a9",
+      "UploadedAt": "2024-01-30T13:45:10Z"
+    }
+  ]
+}
+```
+
+---
+
+### 🔷 API Endpoint: Upload files to S3
+
+#### Request:
+
+**Method:** `POST`  
+**URL:** `/filestorage/upload`<br/>
+**BODY** `IFormFile`
+
+#### Sample Input:
+
+##### **Body (form-data):**
+
+| Key    | Type | Value                               |
+| ------ | ---- | ----------------------------------- |
+| `file` | File | (Select a file, e.g., `sample.txt`) |
+
+#### Sample Output:
+
+```json
+{
+  "Status": "Success",
+  "FileHash": "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3c8a3dfc4d9b4a9e7",
+  "Message": "File uploaded successfully."
+}
+```
+
+---
+
+### 🔷 API Endpoint: Upload files to S3
+
+#### Request:
+
+**Method:** `GET`  
+**URL:** `/filestorage/download/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt`<br/>
+
+#### Sample Input:
+
+```
+downnload/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt
+```
+
+#### Sample Output:
+
+**Pre-signedURL**
+
+```json
+{
+  "Status": "Success",
+  "StatusCode": 200,
+  "Message": "File uploaded successfully.",
+  "DownloadUrl": "http://example.com/files/document1.pdf?access_key=abc123xyz&expires=2024-02-01T12:00:00Z"
+}
+```
 
 ## 🙋🏻‍♀️ Assumptions
 
-- Authentication / Authorization are not a part of this application yet.
+### 🪭 General
 
-#### List All Files Method
+- `Authentication / Authorization` are not a part of this application yet.
+- The folder structure intentionally omits a separate `Core` layer for `Entities` to keep things simple. However, if needed, a dedicated layer for `Entities` can be created later, with models defined alongside appropriate validation attributes.
+- I have a `Shared` folder under `Services` folder that contains custom Attributes namely
+
+  1. `MaxFileSizeAttribute`. (Validation Attribute)
+  2. `MinFileSizeAttribute`. (Validation Attribute)
+  3. `ValidateHashCode`. (ActionFilterAttribute)
+  4. `ValidateFileKey`. (ActionFilterAttribute)
+
+- I have kept a separate `ValueObject` folder which contains a Enum called Status for the formatting the DTO's to have Status of the response.
+
+### 🪭 Methods
+
+#### 🏷️ Upload File Method
+
+#### 🏷️ List All Files Method
 
 A single route is used for both listing all files and listing one file details by hashcode.
 
@@ -352,18 +466,47 @@ A single route is used for both listing all files and listing one file details b
 
 ---
 
-#### Download File Method
+#### 🏷️ Download File Method
 
-The method used for downloading files is **Pre-signed URLs**.
+So far I have discovered two methods for downloading files <br/> 1. **Pre-signed URLs**. <br/> 2. **Direct Streaming**.<br/>
 
-##### WHY?
+I have tested and both works. Both can be used depending on the scenarios and requirements as such - <br/>
 
-1. The servers are small, and directly downloading the file to the server is not a feasible option.
-2. The goal is to stream the file directly to the client's browser, reducing the load on the server.
-3. Pre-signed URLs allow the browser to handle the download, enabling it to resume in case of network failure.
+#### ❇️ Choosing Between Pre-Signed URLs and Direct Streaming
 
-##### Solution
+Depending on the **scenario** and **requirements**, both **pre-signed URLs** and **direct streaming** are valid options. Here's a breakdown of when to use each:
 
-- Files are streamed directly to the client's browser.
-- **Pre-signed URLs** offload the server and provide enhanced security by expiring after a specified time (e.g., 30 minutes).
-- These URLs can also be configured with **Access Control Lists (ACLs)** to define who has access to the file.
+---
+
+#### 1. Pre-Signed URLs for Email Sharing
+
+If you need to **send the download link** via email to a user, **pre-signed URLs** are a great choice. These URLs:
+
+- Are **secure** and include an **expiration time**, ensuring temporary access to the file.
+- Can be easily shared via **email** without worrying about unauthorized access.
+- Provide **control** over who can download the file and for how long.
+
+**Ideal use case:** When sending files to users in a **secure and controlled manner** via email.
+
+---
+
+#### 2. Direct Streaming for Immediate Access
+
+For situations where the **file needs to be downloaded directly** without requiring a separate link (e.g., within a web app), **direct streaming** is often the better option. This approach:
+
+- **Streams** the file directly to the user without the need for an extra URL.
+- Is **quick** and **efficient**, with no extra steps for the user.
+- Does, however, **put some load on the server**, as the file is being processed and streamed in real-time.
+
+**Ideal use case:** When you need to provide **instant access** to files with minimal complexity, and server load is not a major concern.
+
+---
+
+#### Which One to Use?
+
+- If you're sending a file link to users, **go with pre-signed URLs** for better **security** and **control**.
+- If it's for **quick downloads** or streaming content directly without links, **direct streaming** works well, though keep an eye on **server load**.
+
+---
+
+Feel free to choose the option that best fits your **use case**!

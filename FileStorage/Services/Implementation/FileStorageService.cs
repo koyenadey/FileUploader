@@ -9,7 +9,6 @@ using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using FileStorage.Services.DTO;
 using FileStorage.Services.ValueObject;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 
 namespace FileStorage.Services
@@ -76,9 +75,9 @@ namespace FileStorage.Services
             catch (Exception ex)
             {
                 _logger.LogError($"Error during file upload: {ex}");
-
+                responseFileUpload = new ResponseFileUploadDto(Status.Success, "Error");
             }
-            responseFileUpload = new ResponseFileUploadDto(Status.Success, "Error");
+
             return responseFileUpload;
         }
 
@@ -105,7 +104,7 @@ namespace FileStorage.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error updating data to DynamoDb", ex.Message);
+                Console.WriteLine("Error updating data to DynamoDb:" + fileKey + "//" + ex);
             }
             return shaResponseDto;
         }
@@ -236,7 +235,7 @@ namespace FileStorage.Services
             return foundFiles;
         }
 
-        public async Task<DownloadFileFromS3Dto> DownloadFileFromS3(string fileKey)
+        public async Task<DownloadFileFromS3Dto> DownloadFromS3(string fileKey)
         {
             DownloadFileFromS3Dto fileDownloadDto;
 
@@ -255,6 +254,7 @@ namespace FileStorage.Services
                     Key = fileKey,
                     Expires = DateTime.UtcNow.AddMinutes(120),
                     Verb = HttpVerb.GET,
+                    Protocol = Protocol.HTTP,
                     ResponseHeaderOverrides = new ResponseHeaderOverrides
                     {
                         ContentDisposition = "attachment; filename=" + fileKey // Ensure this header is set for downloading
@@ -270,6 +270,17 @@ namespace FileStorage.Services
                 fileDownloadDto = new DownloadFileFromS3Dto(Status.Error, StatusCodes.Status500InternalServerError, ex.Message, String.Empty);
             }
             return fileDownloadDto;
+        }
+
+        public async Task<GetObjectResponse> GetS3ClientResponseObject(string fileKey)
+        {
+            var request = new GetObjectRequest
+            {
+                BucketName = _s3BucketName,
+                Key = fileKey
+            };
+            var s3Response = await _s3Client.GetObjectAsync(request);
+            return s3Response;
         }
 
     }

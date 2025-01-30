@@ -4,3 +4,19 @@ GET {{FileStorage_HostAddress}}/health
 Accept: application/json
 
 ###
+GET {{FileStorage_HostAddress}}/api/filestorage/listfiles
+
+###
+POST {{FileStorage_HostAddress}}/api/filestorage/upload
+
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="UploadFile"; filename="testfile.txt"
+Content-Type: text/plain
+
+< ./testfile.txt
+------WebKitFormBoundary--
+
+###
+GET {{FileStorage_HostAddress}}/api/filestorage/download/f391e970-0a2d-46e4-ac11-5489f6df61c5_Boundless.txt
