@@ -19,7 +19,8 @@ namespace FileStorage.Services.Shared.Attributes
                     context.Result = new BadRequestObjectResult("Invalid key format. Expected format: <GUID>_filename.txt");
                 }
             }
-            context.Result = new BadRequestObjectResult("Invalid file key.");
+            else
+                context.Result = new BadRequestObjectResult("Invalid file key.");
         }
     }
 }

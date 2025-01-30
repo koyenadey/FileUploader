@@ -46,6 +46,7 @@ public class FileStorageController : ControllerBase
     }
 
     [HttpGet("downloadfile/{fileKey}")]
+    [ValidateFileKey]
     public async Task<IActionResult> DownloadFileFromS3([FromRoute] string fileKey)
     {
         var result = await _fileStorageService.DownloadFromS3(fileKey);

@@ -11,7 +11,7 @@ This is application integrates with AWS services to `upload`, `retrieve` and `li
 ### 📌 Key Features
 
 - 🍀 **Resilient File Upload** to AWS storage S3 Bucket.
-- 🍀 **Efficient Retrieves** stored files from S3 Bucket.
+- 🍀 **Efficient Retrieves** from files stored in S3 Bucket.
 - 🍀 **Lists all stored files** for easy management and retrieval from S3.
 - 🍀 **SHA-256 Hashing**: calculates and stores the SHA-256 hash of each uploaded file to DynamoDB, ensuring file integrity and traceability.
 
@@ -402,7 +402,7 @@ For example:
 
 ---
 
-### 🔷 API Endpoint: Upload files to S3
+### 🔷 API Endpoint: Download files from S3
 
 #### Request:
 
@@ -412,7 +412,7 @@ For example:
 #### Sample Input:
 
 ```
-downnload/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt
+download/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt
 ```
 
 #### Sample Output:
