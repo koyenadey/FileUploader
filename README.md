@@ -428,8 +428,9 @@ http://localhost:8080
 
 #### 1. Request:
 
+**Pre-signedURL**<br>
 **Method:** `GET`  
-**URL:** `/api/filestorage/download/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt`<br/>
+**URL:** `/api/filestorage/downloadfile/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt`<br/>
 
 #### Sample Input:
 
@@ -438,8 +439,6 @@ download/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt
 ```
 
 #### Sample Output:
-
-**Pre-signedURL**
 
 ```json
 {
@@ -454,18 +453,17 @@ download/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt
 
 #### 2. Request:
 
+**Direct Streaming**<br>
 **Method:** `GET`  
-**URL:** `/api/filestorage/downloadfile/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt`<br/>
+**URL:** `/api/filestorage/download/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt`<br/>
 
 #### Sample Input:
 
 ```
-downloadfile/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt
+download/f2f913e7-9cba-4e56-91f8-e8c0c9c697f1_document.txt
 ```
 
 #### Sample Output:
-
-**Direct Streaming**
 
 Downloads the file directly to the browser.
 
