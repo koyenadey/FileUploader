@@ -22,7 +22,7 @@ The application exposes a set of **REST API** endpoints written in C#, which han
 - [Requirements](#-requirements)
 - [Services Used](#-aws-services-used)
 - [Installation](#️-installations)
-- [Folder Structure](#folder-structure)
+- [Folder Structure](#-folder-structure)
 - [Implementation Details](#️-implementation-details)
   - [Upload File](#-upload)
     1. [Sequence Diagram](#-the-sequence-diagram-for-the-upload-process-is-given-below--)
